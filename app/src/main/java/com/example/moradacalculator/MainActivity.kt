@@ -2,100 +2,79 @@ package com.example.moradacalculator
 
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+
 
 class MainActivity : AppCompatActivity() {
-    private var operand1: Double? = null
-    private var operator: String? = null
-    private var isNewOperation = true
+    private var operand1EditText: EditText? = null
+    private var operand2EditText: EditText? = null
+    private var resultTextView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        operand1EditText = findViewById(R.id.operand1)
+        operand2EditText = findViewById(R.id.operand2)
+        resultTextView = findViewById(R.id.output)
+
+        val addButton = findViewById<Button>(R.id.add)
+        val subtractButton = findViewById<Button>(R.id.subtract)
+        val multiplyButton = findViewById<Button>(R.id.multiply)
+        val divideButton = findViewById<Button>(R.id.divide)
+        val clearButton = findViewById<Button>(R.id.clear)
+
+        addButton.setOnClickListener { performOperation(Operation.ADD) }
+
+        subtractButton.setOnClickListener { performOperation(Operation.SUBTRACT) }
+
+        multiplyButton.setOnClickListener { performOperation(Operation.MULTIPLY) }
+
+        divideButton.setOnClickListener { performOperation(Operation.DIVIDE) }
+
+        clearButton.setOnClickListener { clearInputs() }
+    }
+
+    private fun performOperation(operation: Operation) {
+        val operand1Str = operand1EditText!!.text.toString()
+        val operand2Str = operand2EditText!!.text.toString()
+
+        if (operand1Str.isEmpty() || operand2Str.isEmpty()) {
+            resultTextView!!.text = "Please enter both operands"
+            return
         }
 
-        val input: TextView = findViewById(R.id.input)
-        val output: TextView = findViewById(R.id.total)
+        val operand1 = operand1Str.toDouble()
+        val operand2 = operand2Str.toDouble()
+        var result = 0.0
 
-        val buttons = mapOf(
-            R.id.Num1 to "1",
-            R.id.Num2 to "2",
-            R.id.Num3 to "3",
-            R.id.Num4 to "4",
-            R.id.Num5 to "5",
-            R.id.Num6 to "6",
-            R.id.Num7 to "7",
-            R.id.Num8 to "8",
-            R.id.Num9 to "9",
-            R.id.zero to "0",
-            R.id.doublezero to "00",
-            R.id.addition to "+",
-            R.id.subtract to "-",
-            R.id.multiply to "*",
-            R.id.divide to "/",
-            R.id.clearall to "C",
-            R.id.clearone to "CE"
-        )
-
-        buttons.forEach { (id, value) ->
-            findViewById<Button>(id).setOnClickListener {
-                when (value) {
-                    "C" -> {
-                        input.text = ""
-                        output.text = ""
-                        operand1 = null
-                        operator = null
-                        isNewOperation = true
-                    }
-                    "CE" -> {
-                        if (input.text.isNotEmpty()) {
-                            input.text = input.text.dropLast(1)
-                        }
-                    }
-                    "+", "-", "*", "/" -> {
-                        if (input.text.isNotEmpty()) {
-                            operand1 = input.text.toString().toDouble()
-                            operator = value
-                            input.text = ""
-                            isNewOperation = false
-                        }
-                    }
-                    else -> {
-                        if (isNewOperation) {
-                            input.text = value
-                            isNewOperation = false
-                        } else {
-                            input.text = "${input.text}$value"
-                        }
-                    }
-                }
+        when (operation) {
+            Operation.ADD -> result = operand1 + operand2
+            Operation.SUBTRACT -> result = operand1 - operand2
+            Operation.MULTIPLY -> result = operand1 * operand2
+            Operation.DIVIDE -> if (operand2 != 0.0) {
+                result = operand1 / operand2
+            } else {
+                resultTextView!!.text = "Cannot divide by zero"
+                return
             }
         }
+        resultTextView!!.text = result.toString()
+    }
 
-        findViewById<Button>(R.id.equals).setOnClickListener {
-            if (input.text.isNotEmpty() && operand1 != null && operator != null) {
-                val operand2 = input.text.toString().toDouble()
-                val result = when (operator) {
-                    "+" -> operand1!! + operand2
-                    "-" -> operand1!! - operand2
-                    "*" -> operand1!! * operand2
-                    "/" -> if (operand2 != 0.0) operand1!! / operand2 else Double.NaN
-                    else -> Double.NaN
-                }
-                output.text = result.toString().take(10)  // Display result with up to 10 characters
-                operand1 = null
-                operator = null
-                isNewOperation = true
-            }
-        }
+    private fun clearInputs() {
+        operand1EditText!!.setText("")
+        operand2EditText!!.setText("")
+        resultTextView!!.text = "Result"
+    }
+
+    private enum class Operation {
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE
     }
 }
+
